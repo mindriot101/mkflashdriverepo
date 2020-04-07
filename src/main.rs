@@ -1,21 +1,23 @@
-#[macro_use]
-extern crate structopt;
-
-use std::result;
 use std::error::Error;
 use std::fs;
-use std::process;
 use std::path::PathBuf;
+use std::process;
+use std::result;
 use structopt::StructOpt;
 
-type Result<T> = result::Result<T, Box<Error>>;
+type Result<T> = result::Result<T, Box<dyn Error>>;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "mkflashdriverepo", about = "Create a new flashdrive repo")]
 struct Opts {
     #[structopt(help = "Name to create")]
     name: String,
-    #[structopt(short = "p", long = "path", default_value = "/Volumes/PORTABLE/gitrepos", parse(from_os_str))]
+    #[structopt(
+        short = "p",
+        long = "path",
+        default_value = "/Volumes/PORTABLE/gitrepos",
+        parse(from_os_str)
+    )]
     path: PathBuf,
     #[structopt(short = "f", long = "force")]
     force: bool,
@@ -41,8 +43,11 @@ fn run(opts: Opts) -> Result<()> {
     let newpath = path.join(format!("{}.git", opts.name));
     if newpath.exists() {
         if !opts.force {
-            return Err(format!("Repo {} exists. Use -f/--force to overwrite",
-                               newpath.to_str().unwrap()).into());
+            return Err(format!(
+                "Repo {} exists. Use -f/--force to overwrite",
+                newpath.to_str().unwrap()
+            )
+            .into());
         } else {
             fs::remove_dir_all(&newpath)?;
         }
